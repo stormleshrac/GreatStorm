@@ -1,5 +1,5 @@
--- Guardian Fantasmal
-local s,id = GetID()
+--Guardian Fantasmal
+local s,id=GetID()
 function s.initial_effect(c)
     -- Definición de atributos
     c:EnableReviveLimit()
@@ -17,5 +17,5 @@ end
 
 -- Función para el efecto de no ser destruido en batalla
 function s.indes(e,c)
-    return c:GetBaseAttack()<e:GetHandler():GetAttack()
+    return c:GetBaseAttack()<=e:GetHandler():GetAttack()
 end
