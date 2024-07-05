@@ -1,10 +1,10 @@
--- Ascensión de Zera
+-- AscensiÃ³n de Zera
 local s,id=GetID()
 function s.initial_effect(c)
     -- habilitar contador
     c:EnableCounterPermit(COUNTER_SPELL)
     -- procedimiento de equipamiento
-    aux.AddEquipProcedure(c)
+    aux.AddEquipProcedure(c, nil, s.filter)
     -- activar solo si controlas a Warrior of Zera
     local e1=Effect.CreateEffect(c)
     e1:SetType(EFFECT_TYPE_ACTIVATE)
@@ -28,6 +28,10 @@ function s.initial_effect(c)
     e3:SetTarget(s.sptg)
     e3:SetOperation(s.spop)
     c:RegisterEffect(e3)
+end
+
+function s.filter(c)
+    return c:IsCode(66073051)
 end
 
 function s.condition(e,tp,eg,ep,ev,re,r,rp)
