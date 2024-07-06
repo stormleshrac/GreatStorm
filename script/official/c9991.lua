@@ -41,6 +41,6 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
     e2:SetCode(EFFECT_UPDATE_ATTACK)
     e2:SetTargetRange(LOCATION_MZONE,0)
     e2:SetValue(300)
-    e2:SetReset(RESET_PHASE+PHASE_BATTLE)
+    e2:SetReset(RESET_EVENT+RESETS_STANDARD)
     Duel.RegisterEffect(e2,tp)
 end
