@@ -2,6 +2,9 @@
 -- Script by ChatGPT
 local s,id=GetID()
 function s.initial_effect(c)
+    -- Set Unchained archetype
+    c:SetSetCard(0x231)
+
     -- Special Summon Clones
     local e1=Effect.CreateEffect(c)
     e1:SetDescription(aux.Stringid(id,0))
