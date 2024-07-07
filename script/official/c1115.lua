@@ -12,14 +12,20 @@ function s.initial_effect(c)
     local e2=e1:Clone()
     e2:SetCode(EFFECT_UPDATE_DEFENSE)
     c:RegisterEffect(e2)
-    -- Double attack
+    -- Level increase
     local e3=Effect.CreateEffect(c)
-    e3:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
-    e3:SetCode(EVENT_BATTLE_DESTROYING)
-    e3:SetRange(LOCATION_SZONE)
-    e3:SetCondition(s.atcon)
-    e3:SetOperation(s.atop)
+    e3:SetType(EFFECT_TYPE_EQUIP)
+    e3:SetCode(EFFECT_UPDATE_LEVEL)
+    e3:SetValue(1)
     c:RegisterEffect(e3)
+    -- Double attack
+    local e4=Effect.CreateEffect(c)
+    e4:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
+    e4:SetCode(EVENT_BATTLE_DESTROYING)
+    e4:SetRange(LOCATION_SZONE)
+    e4:SetCondition(s.atcon)
+    e4:SetOperation(s.atop)
+    c:RegisterEffect(e4)
 end
 
 function s.eqlimit(e,c)
