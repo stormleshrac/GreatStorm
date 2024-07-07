@@ -2,9 +2,6 @@
 -- Script by ChatGPT
 local s,id=GetID()
 function s.initial_effect(c)
-    -- Set Unchained archetype
-    c:SetSetCard(0x231)
-
     -- Special Summon Clones
     local e1=Effect.CreateEffect(c)
     e1:SetDescription(aux.Stringid(id,0))
@@ -33,7 +30,7 @@ function s.initial_effect(c)
 end
 
 function s.spcon(e,tp,eg,ep,ev,re,r,rp)
-    return Duel.IsExistingMatchingCard(aux.FilterFaceupFunction(Card.IsAttribute,ATTRIBUTE_DARK),tp,LOCATION_GRAVE,0,1,nil)
+    return Duel.IsExistingMatchingCard(aux.FaceupFilter(Card.IsAttribute,ATTRIBUTE_DARK),tp,LOCATION_GRAVE,0,1,nil)
 end
 
 function s.spcon_hand(e,tp,eg,ep,ev,re,r,rp)
@@ -61,7 +58,7 @@ end
 
 function s.retop(e,tp,eg,ep,ev,re,r,rp)
     local c=e:GetHandler()
-    if c:IsRelateToEffect(e) and Duel.IsExistingMatchingCard(aux.FilterFaceupFunction(Card.IsCode,id),tp,LOCATION_MZONE,0,1,nil) then
+    if c:IsRelateToEffect(e) and Duel.IsExistingMatchingCard(aux.FaceupFilter(Card.IsCode,id),tp,LOCATION_MZONE,0,1,nil) then
         local e1=Effect.CreateEffect(c)
         e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
         e1:SetCode(EVENT_PHASE+PHASE_END)
@@ -75,7 +72,7 @@ end
 
 function s.retop2(e,tp,eg,ep,ev,re,r,rp)
     local tc=e:GetLabelObject()
-    if tc:IsLocation(LOCATION_GRAVE) and Duel.IsExistingMatchingCard(aux.FilterFaceupFunction(Card.IsCode,id),tp,LOCATION_MZONE,0,1,nil) then
+    if tc:IsLocation(LOCATION_GRAVE) and Duel.IsExistingMatchingCard(aux.FaceupFilter(Card.IsCode,id),tp,LOCATION_MZONE,0,1,nil) then
         Duel.SpecialSummon(tc,0,tp,tp,false,false,POS_FACEUP)
     end
 end
