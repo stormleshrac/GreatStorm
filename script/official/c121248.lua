@@ -34,7 +34,10 @@ function s.initial_effect(c)
     c:RegisterEffect(e4)
 end
 function s.lcheck(g,lc,sumtype,tp)
-    return g:IsExists(Card.IsType,1,nil,TYPE_FUSION,lc,sumtype,tp)
+    return g:IsExists(Card.IsType,1,nil,TYPE_FUSION,lc,sumtype,tp) and 
+           g:IsExists(Card.IsRace,1,nil,RACE_WARRIOR,lc,sumtype,tp) and 
+           (g:IsExists(Card.IsType,1,nil,TYPE_NORMAL,lc,sumtype,tp) or 
+            g:IsExists(Card.IsType,1,nil,TYPE_EFFECT,lc,sumtype,tp))
 end
 function s.distg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
     if chkc then return chkc:IsLocation(LOCATION_MZONE) and chkc:IsControler(1-tp) end
