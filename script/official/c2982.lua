@@ -1,8 +1,7 @@
--- Guerrero Oscuro del Este
 local s,id=GetID()
 function s.initial_effect(c)
     -- xyz summon
-    Xyz.AddProcedure(c,nil,4,2)
+    Xyz.AddProcedure(c,aux.FilterBoolFunction(Card.IsRace,RACE_WARRIOR),4,2)
     c:EnableReviveLimit()
     -- reduce ATK
     local e1=Effect.CreateEffect(c)
