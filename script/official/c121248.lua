@@ -42,6 +42,14 @@ function s.initial_effect(c)
     e4:SetTarget(s.distg)
     e4:SetOperation(s.disop)
     c:RegisterEffect(e4)
+    --Only one effect per turn
+    local e5=Effect.CreateEffect(c)
+    e5:SetType(EFFECT_TYPE_SINGLE)
+    e5:SetCode(EFFECT_LIMIT_CUSTOM_ACT)
+    e5:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
+    e5:SetCondition(s.actcon)
+    e5:SetValue(s.actlimit)
+    c:RegisterEffect(e5)
 end
 function s.lcheck(g,lc,sumtype,tp)
     return g:IsExists(Card.IsType,1,nil,TYPE_FUSION,lc,sumtype,tp) and g:IsExists(Card.IsRace,1,nil,RACE_WARRIOR,lc,sumtype,tp)
@@ -104,4 +112,10 @@ function s.disop(e,tp,eg,ep,ev,re,r,rp)
         e2:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END)
         c:RegisterEffect(e2)
     end
+end
+function s.actcon(e)
+    return e:GetHandler():GetFlagEffect(id)>0
+end
+function s.actlimit(e,re,rp)
+    return not re:GetHandler():IsImmuneToEffect(e)
 end
