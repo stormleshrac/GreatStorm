@@ -1,125 +1,76 @@
---Oculus El Majestuoso
+--Oculus el Majestuoso
 local s,id=GetID()
 function s.initial_effect(c)
-    -- Link summon
-    Link.AddProcedure(c,aux.FilterBoolFunctionEx(Card.IsRace,RACE_WARRIOR),2,2,s.lcheck)
+    --Link Summon
     c:EnableReviveLimit()
-    -- Negate effects
+    Link.AddProcedure(c,aux.FilterBoolFunctionEx(Card.IsType,TYPE_FUSION),1,1)
+    Link.AddProcedure(c,aux.FilterBoolFunctionEx(Card.IsType,TYPE_WARRIOR),1,1)
+    
+    --Negate effect
     local e1=Effect.CreateEffect(c)
     e1:SetDescription(aux.Stringid(id,0))
-    e1:SetCategory(CATEGORY_DISABLE)
-    e1:SetType(EFFECT_TYPE_IGNITION)
-    e1:SetRange(LOCATION_MZONE)
+    e1:SetCategory(CATEGORY_NEGATE)
+    e1:SetType(EFFECT_TYPE_QUICK_O)
+    e1:SetCode(EVENT_CHAINING)
     e1:SetCountLimit(1)
-    e1:SetTarget(s.distg)
-    e1:SetOperation(s.disop)
+    e1:SetRange(LOCATION_MZONE)
+    e1:SetCondition(s.negcon)
+    e1:SetTarget(s.negtg)
+    e1:SetOperation(s.negop)
     c:RegisterEffect(e1)
-    -- Cannot attack the turn it activates this effect
-    local e1b=e1:Clone()
-    e1b:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
-    e1b:SetCode(EVENT_CHAINING)
-    e1b:SetOperation(function(e,tp,eg,ep,ev,re,r,rp) e:GetHandler():RegisterFlagEffect(id,RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END,0,1) end)
-    c:RegisterEffect(e1b)
-    local e1c=e1:Clone()
-    e1c:SetType(EFFECT_TYPE_FIELD)
-    e1c:SetCode(EFFECT_CANNOT_ATTACK)
-    e1c:SetProperty(EFFECT_FLAG_IGNORE_IMMUNE)
-    e1c:SetTargetRange(LOCATION_MZONE,0)
-    e1c:SetTarget(function(e,c) return c:GetFlagEffect(id)~=0 end)
-    c:RegisterEffect(e1c)
-    -- Direct attack
+    
+    --Direct attack with ATK reduction
     local e2=Effect.CreateEffect(c)
-    e2:SetType(EFFECT_TYPE_SINGLE)
-    e2:SetCode(EFFECT_DIRECT_ATTACK)
-    e2:SetCondition(s.dircon)
+    e2:SetDescription(aux.Stringid(id,1))
+    e2:SetType(EFFECT_TYPE_IGNITION)
+    e2:SetRange(LOCATION_MZONE)
+    e2:SetCountLimit(1)
+    e2:SetCondition(s.atkcon)
+    e2:SetOperation(s.atkop)
     c:RegisterEffect(e2)
-    -- Reduce ATK and return to original at end of Damage Calculation
-    local e3=Effect.CreateEffect(c)
-    e3:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_CONTINUOUS)
-    e3:SetCode(EVENT_PRE_DAMAGE_CALCULATE)
-    e3:SetCondition(s.atkcon)
-    e3:SetOperation(s.atkop)
-    c:RegisterEffect(e3)
-    -- Avoid destruction
-    local e4=Effect.CreateEffect(c)
-    e4:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_CONTINUOUS)
-    e4:SetCode(EFFECT_DESTROY_REPLACE)
-    e4:SetTarget(s.reptg)
-    c:RegisterEffect(e4)
 end
-function s.lcheck(g,lc,sumtype,tp)
-    return g:IsExists(Card.IsType,1,nil,TYPE_FUSION,lc,sumtype,tp) and 
-           g:IsExists(Card.IsRace,1,nil,RACE_WARRIOR,lc,sumtype,tp) and 
-           (g:IsExists(Card.IsType,1,nil,TYPE_NORMAL,lc,sumtype,tp) or 
-            g:IsExists(Card.IsType,1,nil,TYPE_EFFECT,lc,sumtype,tp))
+
+function s.negcon(e,tp,eg,ep,ev,re,r,rp)
+    return re:IsActiveType(TYPE_MONSTER) and Duel.IsChainNegatable(ev)
 end
-function s.distg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-    if chkc then return chkc:IsLocation(LOCATION_MZONE) and chkc:IsControler(1-tp) end
-    if chk==0 then return Duel.IsExistingMatchingCard(Card.IsNegatableMonster,tp,0,LOCATION_MZONE,1,nil) end
-    Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_FACEUP)
-    local g=Duel.SelectMatchingCard(tp,Card.IsNegatableMonster,tp,0,LOCATION_MZONE,1,1,nil)
-    Duel.SetOperationInfo(0,CATEGORY_DISABLE,g,1,0,0)
+
+function s.negtg(e,tp,eg,ep,ev,re,r,rp,chk)
+    if chk==0 then return true end
+    Duel.SetOperationInfo(0,CATEGORY_NEGATE,eg,1,0,0)
+    --Prevent attacking this turn
+    local e1=Effect.CreateEffect(e:GetHandler())
+    e1:SetType(EFFECT_TYPE_SINGLE)
+    e1:SetCode(EFFECT_CANNOT_ATTACK)
+    e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_OATH)
+    e1:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END)
+    e:GetHandler():RegisterEffect(e1)
 end
-function s.disop(e,tp,eg,ep,ev,re,r,rp)
-    local c=e:GetHandler()
-    local tc=Duel.GetFirstTarget()
-    if tc and ((tc:IsFaceup() and not tc:IsDisabled()) or tc:IsType(TYPE_TRAPMONSTER)) then
-        Duel.NegateRelatedChain(tc,RESET_TURN_SET)
-        local e1=Effect.CreateEffect(c)
-        e1:SetType(EFFECT_TYPE_SINGLE)
-        e1:SetCode(EFFECT_DISABLE)
-        e1:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END)
-        tc:RegisterEffect(e1)
-        local e2=Effect.CreateEffect(c)
-        e2:SetType(EFFECT_TYPE_SINGLE)
-        e2:SetCode(EFFECT_DISABLE_EFFECT)
-        e2:SetValue(RESET_TURN_SET)
-        e2:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END)
-        tc:RegisterEffect(e2)
-        if tc:IsType(TYPE_TRAPMONSTER) then
-            local e3=Effect.CreateEffect(c)
-            e3:SetType(EFFECT_TYPE_SINGLE)
-            e3:SetCode(EFFECT_DISABLE_TRAPMONSTER)
-            e3:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END)
-            tc:RegisterEffect(e3)
-        end
+
+function s.negop(e,tp,eg,ep,ev,re,r,rp)
+    if Duel.NegateActivation(ev) and re:GetHandler():IsRelateToEffect(re) then
+        Duel.Destroy(eg,REASON_EFFECT)
     end
 end
-function s.dircon(e)
-    return e:GetHandler():GetAttackAnnouncedCount()==0
+
+function s.atkcon(e,tp,eg,ep,ev,re,r,rp)
+    return not e:GetHandler():IsHasEffect(EFFECT_CANNOT_ATTACK)
 end
-function s.atkcon(e)
-    return e:GetHandler():GetAttackAnnouncedCount()>0
-end
+
 function s.atkop(e,tp,eg,ep,ev,re,r,rp)
     local c=e:GetHandler()
-    local e1=Effect.CreateEffect(c)
-    e1:SetType(EFFECT_TYPE_SINGLE)
-    e1:SetCode(EFFECT_UPDATE_ATTACK)
-    e1:SetValue(-1000)
-    e1:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_DAMAGE_CAL)
-    c:RegisterEffect(e1)
-    local e2=e1:Clone()
-    e2:SetCode(EFFECT_UPDATE_ATTACK)
-    e2:SetValue(1000)
-    e2:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END)
-    e2:SetCondition(s.atkcon2)
-    c:RegisterEffect(e2)
-end
-function s.atkcon2(e)
-    local ph=Duel.GetCurrentPhase()
-    return ph>=PHASE_DAMAGE_CAL and ph<=PHASE_DAMAGE
-end
-function s.repfilter(c)
-    return c:IsRace(RACE_WARRIOR) and c:IsAbleToRemove()
-end
-function s.reptg(e,tp,eg,ep,ev,re,r,rp,chk)
-    if chk==0 then return e:GetHandler():IsReason(REASON_BATTLE)
-        and Duel.IsExistingMatchingCard(s.repfilter,tp,LOCATION_GRAVE,0,1,nil) end
-    if Duel.SelectYesNo(tp,aux.Stringid(id,1)) then
-        Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
-        local g=Duel.SelectMatchingCard(tp,s.repfilter,tp,LOCATION_GRAVE,0,1,1,nil)
-        Duel.Remove(g,POS_FACEUP,REASON_EFFECT)
-        return true
-    else return false end
+    if c:IsFaceup() and c:IsRelateToEffect(e) then
+        --Reduce ATK by 1000
+        local e1=Effect.CreateEffect(c)
+        e1:SetType(EFFECT_TYPE_SINGLE)
+        e1:SetCode(EFFECT_UPDATE_ATTACK)
+        e1:SetValue(-1000)
+        e1:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END)
+        c:RegisterEffect(e1)
+        --Direct attack
+        local e2=Effect.CreateEffect(c)
+        e2:SetType(EFFECT_TYPE_SINGLE)
+        e2:SetCode(EFFECT_DIRECT_ATTACK)
+        e2:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END)
+        c:RegisterEffect(e2)
+    end
 end
