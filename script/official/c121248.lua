@@ -14,17 +14,31 @@ function s.initial_effect(c)
     e1:SetTarget(s.distg)
     e1:SetOperation(s.disop)
     c:RegisterEffect(e1)
+    -- Cannot attack the turn it activates this effect
+    local e1b=e1:Clone()
+    e1b:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
+    e1b:SetCode(EVENT_CHAINING)
+    e1b:SetOperation(function(e,tp,eg,ep,ev,re,r,rp) e:GetHandler():RegisterFlagEffect(id,RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END,0,1) end)
+    c:RegisterEffect(e1b)
+    local e1c=e1:Clone()
+    e1c:SetType(EFFECT_TYPE_FIELD)
+    e1c:SetCode(EFFECT_CANNOT_ATTACK)
+    e1c:SetProperty(EFFECT_FLAG_IGNORE_IMMUNE)
+    e1c:SetTargetRange(LOCATION_MZONE,0)
+    e1c:SetTarget(function(e,c) return c:GetFlagEffect(id)~=0 end)
+    c:RegisterEffect(e1c)
     -- Direct attack
     local e2=Effect.CreateEffect(c)
     e2:SetType(EFFECT_TYPE_SINGLE)
     e2:SetCode(EFFECT_DIRECT_ATTACK)
     e2:SetCondition(s.dircon)
-    local e3=Effect.CreateEffect(c)
-    e3:SetType(EFFECT_TYPE_SINGLE)
-    e3:SetCode(EFFECT_UPDATE_ATTACK)
-    e3:SetValue(-1000)
-    e3:SetCondition(s.atkcon)
     c:RegisterEffect(e2)
+    -- Reduce ATK and return to original at end of Damage Calculation
+    local e3=Effect.CreateEffect(c)
+    e3:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_CONTINUOUS)
+    e3:SetCode(EVENT_PRE_DAMAGE_CALCULATE)
+    e3:SetCondition(s.atkcon)
+    e3:SetOperation(s.atkop)
     c:RegisterEffect(e3)
     -- Avoid destruction
     local e4=Effect.CreateEffect(c)
@@ -41,9 +55,9 @@ function s.lcheck(g,lc,sumtype,tp)
 end
 function s.distg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
     if chkc then return chkc:IsLocation(LOCATION_MZONE) and chkc:IsControler(1-tp) end
-    if chk==0 then return Duel.IsExistingTarget(Card.IsNegatableMonster,tp,0,LOCATION_MZONE,1,nil) end
+    if chk==0 then return Duel.IsExistingTarget(aux.disfilter1,tp,0,LOCATION_MZONE,1,nil) end
     Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_FACEUP)
-    local g=Duel.SelectTarget(tp,Card.IsNegatableMonster,tp,0,LOCATION_MZONE,1,1,nil)
+    local g=Duel.SelectTarget(tp,aux.disfilter1,tp,0,LOCATION_MZONE,1,1,nil)
     Duel.SetOperationInfo(0,CATEGORY_DISABLE,g,1,0,0)
 end
 function s.disop(e,tp,eg,ep,ev,re,r,rp)
@@ -76,6 +90,25 @@ function s.dircon(e)
 end
 function s.atkcon(e)
     return e:GetHandler():GetAttackAnnouncedCount()>0
+end
+function s.atkop(e,tp,eg,ep,ev,re,r,rp)
+    local c=e:GetHandler()
+    local e1=Effect.CreateEffect(c)
+    e1:SetType(EFFECT_TYPE_SINGLE)
+    e1:SetCode(EFFECT_UPDATE_ATTACK)
+    e1:SetValue(-1000)
+    e1:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_DAMAGE_CAL)
+    c:RegisterEffect(e1)
+    local e2=e1:Clone()
+    e2:SetCode(EFFECT_UPDATE_ATTACK)
+    e2:SetValue(1000)
+    e2:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END)
+    e2:SetCondition(s.atkcon2)
+    c:RegisterEffect(e2)
+end
+function s.atkcon2(e)
+    local ph=Duel.GetCurrentPhase()
+    return ph>=PHASE_DAMAGE_CAL and ph<=PHASE_DAMAGE
 end
 function s.repfilter(c)
     return c:IsRace(RACE_WARRIOR) and c:IsAbleToRemove()
