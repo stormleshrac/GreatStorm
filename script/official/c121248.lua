@@ -2,7 +2,7 @@
 local s,id=GetID()
 function s.initial_effect(c)
     -- Link summon
-    Link.AddProcedure(c,aux.FilterBoolFunctionEx(Card.IsRace,RACE_WARRIOR),1,1,s.lcheck)
+    Link.AddProcedure(c,aux.FilterBoolFunctionEx(Card.IsRace,RACE_WARRIOR),2,2,s.lcheck)
     c:EnableReviveLimit()
     -- Negate effects
     local e1=Effect.CreateEffect(c)
