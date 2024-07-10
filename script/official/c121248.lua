@@ -50,7 +50,7 @@ end
 function s.negcon(e,tp,eg,ep,ev,re,r,rp)
     return not e:GetHandler():IsStatus(STATUS_BATTLE_DESTROYED) and ep~=tp
         and re:IsActiveType(TYPE_MONSTER) and Duel.IsChainNegatable(ev) and Duel.GetTurnPlayer()==tp
-        and not e:GetHandler():GetFlagEffect(id)>0
+        and e:GetHandler():GetFlagEffect(id)==0
 end
 function s.negtg(e,tp,eg,ep,ev,re,r,rp,chk)
     if chk==0 then return true end
@@ -69,13 +69,14 @@ function s.negop(e,tp,eg,ep,ev,re,r,rp)
 end
 function s.dircon(e)
     return not e:GetHandler():IsHasEffect(EFFECT_CANNOT_ATTACK)
+        and e:GetHandler():GetFlagEffect(id)==0
 end
 function s.dirop(e,tp,eg,ep,ev,re,r,rp)
     e:GetHandler():RegisterFlagEffect(id,RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END,0,1)
 end
 function s.atkcon(e,tp,eg,ep,ev,re,r,rp)
     return Duel.GetAttackTarget()==nil and e:GetHandler():IsHasEffect(EFFECT_DIRECT_ATTACK)
-        and not e:GetHandler():GetFlagEffect(id)>0
+        and e:GetHandler():GetFlagEffect(id)==0
 end
 function s.atkop(e,tp,eg,ep,ev,re,r,rp)
     local c=e:GetHandler()
