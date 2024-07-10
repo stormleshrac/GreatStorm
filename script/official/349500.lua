@@ -1,12 +1,12 @@
 --Nueva Calma
-local s,id=GetID()
+local s, id = GetID()
 function s.initial_effect(c)
     -- Activate
-    local e1=Effect.CreateEffect(c)
-    e1:SetCategory(CATEGORY_NEGATE+CATEGORY_SPECIAL_SUMMON+CATEGORY_ATKCHANGE+CATEGORY_DEFCHANGE)
+    local e1 = Effect.CreateEffect(c)
+    e1:SetCategory(CATEGORY_NEGATE_ATTACK + CATEGORY_SPECIAL_SUMMON)
     e1:SetType(EFFECT_TYPE_ACTIVATE)
     e1:SetCode(EVENT_ATTACK_ANNOUNCE)
-    e1:SetProperty(EFFECT_FLAG_CARD_TARGET)
+    e1:SetCountLimit(1, id + EFFECT_COUNT_CODE_OATH)
     e1:SetCondition(s.condition)
     e1:SetCost(s.cost)
     e1:SetTarget(s.target)
@@ -14,36 +14,28 @@ function s.initial_effect(c)
     c:RegisterEffect(e1)
 end
 
-function s.condition(e,tp,eg,ep,ev,re,r,rp)
-    return Duel.GetAttacker():IsControler(1-tp)
+function s.condition(e, tp, eg, ep, ev, re, r, rp)
+    return Duel.GetAttacker():IsControler(1 - tp)
 end
 
-function s.cost(e,tp,eg,ep,ev,re,r,rp,chk)
-    if chk==0 then return Duel.IsExistingMatchingCard(Card.IsRace,tp,LOCATION_HAND,0,1,nil,RACE_WARRIOR) end
-    Duel.DiscardHand(tp,Card.IsRace,1,1,REASON_COST+REASON_DISCARD,nil,RACE_WARRIOR)
+function s.cost(e, tp, eg, ep, ev, re, r, rp, chk)
+    if chk == 0 then return Duel.IsExistingMatchingCard(s.costfilter, tp, LOCATION_HAND, 0, 1, nil) end
+    Duel.DiscardHand(tp, s.costfilter, 1, 1, REASON_COST + REASON_DISCARD)
 end
 
-function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
-    if chk==0 then return Duel.NegateAttack() and Duel.GetLocationCount(tp,LOCATION_MZONE)>0 end
-    Duel.SetOperationInfo(0,CATEGORY_NEGATE,eg,1,0,0)
-    Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_GRAVE)
+function s.costfilter(c)
+    return c:IsType(TYPE_MONSTER) and c:IsDiscardable()
 end
 
-function s.activate(e,tp,eg,ep,ev,re,r,rp)
-    if Duel.NegateAttack() then
-        Duel.BreakEffect()
-        local g=Duel.SelectMatchingCard(tp,aux.NecroValleyFilter(Card.IsRace),tp,LOCATION_GRAVE,0,1,1,nil,RACE_WARRIOR)
-        if #g>0 and Duel.SpecialSummon(g,0,tp,tp,false,false,POS_FACEUP_DEFENSE)~=0 then
-            local tc=g:GetFirst()
-            local e1=Effect.CreateEffect(e:GetHandler())
-            e1:SetType(EFFECT_TYPE_SINGLE)
-            e1:SetCode(EFFECT_SET_ATTACK_FINAL)
-            e1:SetValue(0)
-            e1:SetReset(RESET_EVENT+RESETS_STANDARD)
-            tc:RegisterEffect(e1)
-            local e2=e1:Clone()
-            e2:SetCode(EFFECT_SET_DEFENSE_FINAL)
-            tc:RegisterEffect(e2)
-        end
+function s.target(e, tp, eg, ep, ev, re, r, rp, chk)
+    if chk == 0 then return Duel.GetLocationCount(tp, LOCATION_MZONE) > 0 end
+    Duel.SetOperationInfo(0, CATEGORY_NEGATE_ATTACK, nil, 0, 1 - tp, 1)
+end
+
+function s.activate(e, tp, eg, ep, ev, re, r, rp)
+    Duel.NegateAttack()
+    local tc = Duel.GetOperatedGroup():GetFirst()
+    if tc and tc:IsRace(RACE_WARRIOR) and Duel.GetLocationCount(tp, LOCATION_MZONE) > 0 then
+        Duel.SpecialSummon(tc, 0, tp, tp, false, false, POS_FACEUP_DEFENSE)
     end
 end
