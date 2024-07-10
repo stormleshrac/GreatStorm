@@ -1,4 +1,4 @@
--- Nueva Calma
+--Nueva Calma
 local s,id = GetID()
 function s.initial_effect(c)
     -- Activar en respuesta a un ataque
