@@ -1,46 +1,53 @@
--- Nueva Calma
+--Nueva Calma
 local s,id=GetID()
 function s.initial_effect(c)
-    -- Negate attack and send 1 card to the GY
+    --Activate
     local e1=Effect.CreateEffect(c)
-    e1:SetDescription(aux.Stringid(id,0))
-    e1:SetCategory(CATEGORY_NEGATE_ATTACK+CATEGORY_TOGRAVE+CATEGORY_SPECIAL_SUMMON)
+    e1:SetCategory(CATEGORY_REMOVE+CATEGORY_SPECIAL_SUMMON)
     e1:SetType(EFFECT_TYPE_ACTIVATE)
     e1:SetCode(EVENT_ATTACK_ANNOUNCE)
-    e1:SetCountLimit(1,id,EFFECT_COUNT_CODE_OATH)
-    e1:SetCondition(s.condition)
+    e1:SetProperty(EFFECT_FLAG_CARD_TARGET)
+    e1:SetCountLimit(1,id+EFFECT_COUNT_CODE_OATH)
     e1:SetCost(s.cost)
     e1:SetTarget(s.target)
     e1:SetOperation(s.activate)
     c:RegisterEffect(e1)
 end
 
-function s.condition(e,tp,eg,ep,ev,re,r,rp)
-    return Duel.GetAttacker():IsControler(1-tp)
-end
-
 function s.cost(e,tp,eg,ep,ev,re,r,rp,chk)
-    if chk==0 then return Duel.IsExistingMatchingCard(s.cfilter,tp,LOCATION_HAND,0,1,nil) end
-    Duel.DiscardHand(tp,s.cfilter,1,1,REASON_COST+REASON_DISCARD)
+    if chk==0 then return Duel.IsExistingMatchingCard(s.costfilter,tp,LOCATION_GRAVE,0,1,nil) end
+    Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
+    local g=Duel.SelectMatchingCard(tp,s.costfilter,tp,LOCATION_GRAVE,0,1,1,nil)
+    Duel.Remove(g,POS_FACEUP,REASON_COST)
+    e:SetLabelObject(g:GetFirst())
 end
 
-function s.cfilter(c)
-    return c:IsAbleToGraveAsCost()
+function s.costfilter(c)
+    return c:IsRace(RACE_WARRIOR) and c:IsAbleToRemoveAsCost()
 end
 
 function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
-    if chk==0 then return true end
-    Duel.SetOperationInfo(0,CATEGORY_NEGATE_ATTACK,nil,0,1-tp,1)
-    Duel.SetOperationInfo(0,CATEGORY_TOGRAVE,nil,1,tp,LOCATION_HAND)
-    Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_GRAVE)
+    if chk==0 then return Duel.NegateAttack() end
 end
 
 function s.activate(e,tp,eg,ep,ev,re,r,rp)
     if Duel.NegateAttack() then
-        local g=Duel.GetOperatedGroup()
-        local tc=g:GetFirst()
-        if tc and tc:IsRace(RACE_WARRIOR) and tc:IsCanBeSpecialSummoned(e,0,tp,false,false) then
+        local tc=e:GetLabelObject()
+        if tc and tc:IsCanBeSpecialSummoned(e,0,tp,false,false) then
+            Duel.BreakEffect()
             Duel.SpecialSummon(tc,0,tp,tp,false,false,POS_FACEUP_DEFENSE)
+            local e1=Effect.CreateEffect(e:GetHandler())
+            e1:SetType(EFFECT_TYPE_SINGLE)
+            e1:SetCode(EFFECT_SET_ATTACK)
+            e1:SetValue(0)
+            e1:SetReset(RESET_EVENT+RESETS_STANDARD)
+            tc:RegisterEffect(e1)
+            local e2=Effect.CreateEffect(e:GetHandler())
+            e2:SetType(EFFECT_TYPE_SINGLE)
+            e2:SetCode(EFFECT_SET_DEFENSE)
+            e2:SetValue(0)
+            e2:SetReset(RESET_EVENT+RESETS_STANDARD)
+            tc:RegisterEffect(e2)
         end
     end
 end
