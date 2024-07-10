@@ -22,6 +22,7 @@ function s.initial_effect(c)
     e2:SetType(EFFECT_TYPE_SINGLE)
     e2:SetCode(EFFECT_DIRECT_ATTACK)
     e2:SetCondition(s.dircon)
+    e2:SetOperation(s.dirop)
     c:RegisterEffect(e2)
     --Reduce ATK
     local e3=Effect.CreateEffect(c)
@@ -48,7 +49,8 @@ function s.lcheck(g,lc,sumtype,tp)
 end
 function s.negcon(e,tp,eg,ep,ev,re,r,rp)
     return not e:GetHandler():IsStatus(STATUS_BATTLE_DESTROYED) and ep~=tp
-        and re:IsActiveType(TYPE_MONSTER) and Duel.IsChainNegatable(ev)
+        and re:IsActiveType(TYPE_MONSTER) and Duel.IsChainNegatable(ev) and Duel.GetTurnPlayer()==tp
+        and not e:GetHandler():GetFlagEffect(id)>0
 end
 function s.negtg(e,tp,eg,ep,ev,re,r,rp,chk)
     if chk==0 then return true end
@@ -66,6 +68,9 @@ function s.negop(e,tp,eg,ep,ev,re,r,rp)
 end
 function s.dircon(e)
     return not e:GetHandler():IsHasEffect(EFFECT_CANNOT_ATTACK)
+end
+function s.dirop(e,tp,eg,ep,ev,re,r,rp)
+    e:GetHandler():RegisterFlagEffect(id,RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END,0,1)
 end
 function s.atkcon(e,tp,eg,ep,ev,re,r,rp)
     return Duel.GetAttackTarget()==nil and e:GetHandler():IsHasEffect(EFFECT_DIRECT_ATTACK)
