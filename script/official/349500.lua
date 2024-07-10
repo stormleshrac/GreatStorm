@@ -1,5 +1,5 @@
 -- Nueva Calma
-local s,id = GetID(349500)
+local s = Card()
 function s.initial_effect(c)
     -- Activar
     local e1=Effect.CreateEffect(c)
