@@ -27,7 +27,7 @@ function s.costfilter(c)
 end
 
 function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
-    if chk==0 then return Duel.NegateAttack() end
+    if chk==0 then return Duel.CheckEvent(EVENT_ATTACK_ANNOUNCE) and Duel.GetAttacker():IsControler(1-tp) end
 end
 
 function s.activate(e,tp,eg,ep,ev,re,r,rp)
