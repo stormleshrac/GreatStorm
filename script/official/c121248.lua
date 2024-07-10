@@ -82,7 +82,7 @@ function s.atkop(e,tp,eg,ep,ev,re,r,rp)
     end
 end
 function s.discon(e) -- Added condition for disable effect
-    return not e:GetHandler():IsHasEffect(EFFECT_DIRECT_ATTACK)
+    return Duel.GetTurnPlayer()==e:GetHandlerPlayer() and not e:GetHandler():IsHasEffect(EFFECT_DIRECT_ATTACK)
 end
 function s.distg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
     if chkc then return chkc:IsLocation(LOCATION_MZONE) and chkc:IsControler(1-tp) end
