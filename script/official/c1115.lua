@@ -1,42 +1,55 @@
--- Este Bendecido
-local s,id=GetID()
+-- Nueva Calma
+local s,id = GetID()
 function s.initial_effect(c)
-    -- Equip procedure
-    aux.AddEquipProcedure(c,nil,aux.FilterBoolFunction(Card.IsCode,89987208))
-    -- ATK/DEF increase
+    -- Activar
     local e1=Effect.CreateEffect(c)
-    e1:SetType(EFFECT_TYPE_EQUIP)
-    e1:SetCode(EFFECT_UPDATE_ATTACK)
-    e1:SetValue(1500)
+    e1:SetCategory(CATEGORY_SPECIAL_SUMMON)
+    e1:SetType(EFFECT_TYPE_ACTIVATE)
+    e1:SetCode(EVENT_ATTACK_ANNOUNCE)
+    e1:SetCondition(s.condition)
+    e1:SetCost(s.cost)
+    e1:SetTarget(s.target)
+    e1:SetOperation(s.activate)
     c:RegisterEffect(e1)
-    local e2=e1:Clone()
-    e2:SetCode(EFFECT_UPDATE_DEFENSE)
-    c:RegisterEffect(e2)
-    -- Level increase
-    local e3=Effect.CreateEffect(c)
-    e3:SetType(EFFECT_TYPE_EQUIP)
-    e3:SetCode(EFFECT_UPDATE_LEVEL)
-    e3:SetValue(1)
-    c:RegisterEffect(e3)
-    -- Double attack
-    local e4=Effect.CreateEffect(c)
-    e4:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
-    e4:SetCode(EVENT_BATTLE_DESTROYING)
-    e4:SetRange(LOCATION_SZONE)
-    e4:SetCondition(s.atcon)
-    e4:SetOperation(s.atop)
-    c:RegisterEffect(e4)
 end
-
-function s.eqlimit(e,c)
-    return c:IsCode(89987208)
+function s.condition(e,tp,eg,ep,ev,re,r,rp)
+    return tp~=Duel.GetTurnPlayer()
 end
-
-function s.atcon(e,tp,eg,ep,ev,re,r,rp)
-    local c=e:GetHandler():GetEquipTarget()
-    return eg:IsContains(c) and c:IsRelateToBattle() and c:IsStatus(STATUS_OPPO_BATTLE)
+function s.cfilter(c,e,tp)
+    return c:IsRace(RACE_WARRIOR) and c:IsAbleToRemoveAsCost()
+        and Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_DECK,0,1,nil,e,tp,c:GetCode())
 end
-
-function s.atop(e,tp,eg,ep,ev,re,r,rp)
-    Duel.ChainAttack()
+function s.cost(e,tp,eg,ep,ev,re,r,rp,chk)
+    if chk==0 then return Duel.IsExistingMatchingCard(s.cfilter,tp,LOCATION_GRAVE,0,1,nil,e,tp) end
+    Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
+    local g=Duel.SelectMatchingCard(tp,s.cfilter,tp,LOCATION_GRAVE,0,1,1,nil,e,tp)
+    Duel.Remove(g,POS_FACEUP,REASON_COST)
+    e:SetLabel(g:GetFirst():GetCode())
+end
+function s.spfilter(c,e,tp,code)
+    return c:IsCode(code) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
+end
+function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
+    if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0 end
+    Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_DECK)
+end
+function s.activate(e,tp,eg,ep,ev,re,r,rp)
+    if Duel.NegateAttack() then
+        if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return end
+        Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
+        local g=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_DECK,0,1,1,nil,e,tp,e:GetLabel())
+        if #g>0 then
+            Duel.SpecialSummon(g,0,tp,tp,false,false,POS_FACEUP_DEFENSE)
+            local tc=g:GetFirst()
+            local e1=Effect.CreateEffect(e:GetHandler())
+            e1:SetType(EFFECT_TYPE_SINGLE)
+            e1:SetCode(EFFECT_SET_ATTACK_FINAL)
+            e1:SetValue(0)
+            e1:SetReset(RESET_EVENT+RESETS_STANDARD)
+            tc:RegisterEffect(e1)
+            local e2=e1:Clone()
+            e2:SetCode(EFFECT_SET_DEFENSE_FINAL)
+            tc:RegisterEffect(e2)
+        end
+    end
 end
