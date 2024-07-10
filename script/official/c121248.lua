@@ -42,13 +42,27 @@ function s.initial_effect(c)
     e4:SetTarget(s.distg)
     e4:SetOperation(s.disop)
     c:RegisterEffect(e4)
+    --Variable to check if direct attack was used
+    local e5=Effect.CreateEffect(c)
+    e5:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
+    e5:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
+    e5:SetCode(EVENT_ATTACK_ANNOUNCE)
+    e5:SetRange(LOCATION_MZONE)
+    e5:SetOperation(s.checkop)
+    e5:SetReset(RESET_EVENT+RESETS_STANDARD)
+    c:RegisterEffect(e5)
+    local e6=e5:Clone()
+    e6:SetCode(EVENT_DAMAGE_STEP_END)
+    e6:SetOperation(s.checkop2)
+    c:RegisterEffect(e6)
+    c:RegisterFlagEffect(0,RESET_EVENT+RESETS_STANDARD,EFFECT_FLAG_CLIENT_HINT,1,0,aux.Stringid(id,4))
 end
 function s.lcheck(g,lc,sumtype,tp)
     return g:IsExists(Card.IsType,1,nil,TYPE_FUSION,lc,sumtype,tp) and g:IsExists(Card.IsRace,1,nil,RACE_WARRIOR,lc,sumtype,tp)
 end
 function s.negcon(e,tp,eg,ep,ev,re,r,rp)
     return not e:GetHandler():IsStatus(STATUS_BATTLE_DESTROYED) and ep~=tp
-        and re:IsActiveType(TYPE_MONSTER) and Duel.IsChainNegatable(ev) and not e:GetHandler():IsHasEffect(EFFECT_DIRECT_ATTACK)
+        and re:IsActiveType(TYPE_MONSTER) and Duel.IsChainNegatable(ev) and e:GetHandler():GetFlagEffect(id)==0
 end
 function s.negtg(e,tp,eg,ep,ev,re,r,rp,chk)
     if chk==0 then return true end
@@ -82,7 +96,7 @@ function s.atkop(e,tp,eg,ep,ev,re,r,rp)
     end
 end
 function s.discon(e) -- Added condition for disable effect
-    return Duel.GetTurnPlayer()==e:GetHandlerPlayer() and not e:GetHandler():IsHasEffect(EFFECT_DIRECT_ATTACK)
+    return Duel.GetTurnPlayer()==e:GetHandlerPlayer() and e:GetHandler():GetFlagEffect(id)==0
 end
 function s.distg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
     if chkc then return chkc:IsLocation(LOCATION_MZONE) and chkc:IsControler(1-tp) end
@@ -106,5 +120,15 @@ function s.disop(e,tp,eg,ep,ev,re,r,rp)
         e2:SetCode(EFFECT_CANNOT_ATTACK)
         e2:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END)
         c:RegisterEffect(e2)
+    end
+end
+function s.checkop(e,tp,eg,ep,ev,re,r,rp)
+    if e:GetHandler()==Duel.GetAttacker() then
+        e:GetHandler():RegisterFlagEffect(id,RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END,0,1)
+    end
+end
+function s.checkop2(e,tp,eg,ep,ev,re,r,rp)
+    if e:GetHandler()==Duel.GetAttacker() then
+        e:GetHandler():ResetFlagEffect(id)
     end
 end
