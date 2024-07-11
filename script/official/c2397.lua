@@ -28,6 +28,6 @@ function s.eqop(e,tp,eg,ep,ev,re,r,rp)
     local g=Duel.SelectMatchingCard(tp,Card.IsFaceup,tp,LOCATION_MZONE,0,1,1,c)
     local tc=g:GetFirst()
     if tc then
-        Duel.Equip(tp,c,tc)
+        Duel.Equip(tp,c,tc,true) -- Asegúrate de que la carta se equipa correctamente
     end
 end
