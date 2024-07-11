@@ -15,6 +15,13 @@ function s.initial_effect(c)
     e2:SetCode(EFFECT_INDESTRUCTIBLE_EFFECT)
     e2:SetValue(1)
     c:RegisterEffect(e2)
+    -- Efecto de Unión
+    local e3=Effect.CreateEffect(c)
+    e3:SetType(EFFECT_TYPE_SINGLE)
+    e3:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
+    e3:SetRange(LOCATION_MZONE)
+    e3:SetCode(EFFECT_UNION_STATUS)
+    c:RegisterEffect(e3)
 end
 function s.eqtg(e,tp,eg,ep,ev,re,r,rp,chk)
     if chk==0 then return Duel.GetLocationCount(tp,LOCATION_SZONE)>0
