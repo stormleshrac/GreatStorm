@@ -31,7 +31,20 @@ function s.sumop(e,tp,eg,ep,ev,re,r,rp)
             e1:SetReset(RESET_EVENT+RESETS_STANDARD)
             c:RegisterEffect(e1)
             Duel.SpecialSummonComplete()
+            -- Mover Super Rodo al lugar de Rodo
+            local e2=Effect.CreateEffect(c)
+            e2:SetType(EFFECT_TYPE_FIELD)
+            e2:SetCode(EFFECT_MOVE_SEQUENCE)
+            e2:SetTargetRange(LOCATION_MZONE,0)
+            e2:SetTarget(s.mvtg)
+            e2:SetValue(c:GetSequence())
+            e2:SetReset(RESET_PHASE+PHASE_END)
+            Duel.RegisterEffect(e2,tp)
         end
     end
     Duel.ShuffleDeck(tp)
+end
+
+function s.mvtg(e,c)
+    return c:IsCode(10103200)
 end
