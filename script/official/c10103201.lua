@@ -35,8 +35,9 @@ function s.operation(e,tp,eg,ep,ev,re,r,rp)
             and Duel.SelectYesNo(tp,aux.Stringid(id,0)) then
             Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
             local sg=g:FilterSelect(tp,s.filter,1,1,nil,e,tp)
-            if Duel.SpecialSummon(sg,0,tp,tp,false,false,POS_FACEUP)>0 and c:IsRelateToEffect(e) then
+            if Duel.SpecialSummonStep(sg:GetFirst(),0,tp,tp,false,false,POS_FACEUP,c:GetPreviousSequence()) then
                 Duel.SendtoGrave(c,REASON_EFFECT)
+                Duel.SpecialSummonComplete()
             end
         end
         Duel.ShuffleDeck(tp)
