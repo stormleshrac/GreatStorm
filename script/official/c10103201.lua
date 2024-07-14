@@ -1,12 +1,14 @@
 -- Rodo
 local s,id=GetID()
 function s.initial_effect(c)
-    -- Invocación normal o especial
+    -- Efecto de invocación
     local e1=Effect.CreateEffect(c)
+    e1:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH)
     e1:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
     e1:SetCode(EVENT_SUMMON_SUCCESS)
-    e1:SetProperty(EFFECT_FLAG_DELAY)
-    e1:SetOperation(s.sumop)
+    e1:SetCountLimit(1,id)
+    e1:SetTarget(s.thtg)
+    e1:SetOperation(s.thop)
     c:RegisterEffect(e1)
     local e2=e1:Clone()
     e2:SetCode(EVENT_SPSUMMON_SUCCESS)
@@ -14,37 +16,26 @@ function s.initial_effect(c)
 end
 s.listed_names={10103200}
 
-function s.sumop(e,tp,eg,ep,ev,re,r,rp)
-    local c=e:GetHandler()
-    if Duel.GetFieldGroupCount(tp,LOCATION_DECK,0)<5 then return end
-    local g=Duel.GetDecktopGroup(tp,5)
-    Duel.ConfirmCards(tp,g)
-    if g:IsExists(Card.IsCode,1,nil,10103200) then
-        Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-        local sg=g:FilterSelect(tp,Card.IsCode,1,1,nil,10103200)
-        local tc=sg:GetFirst()
-        if tc and Duel.SpecialSummonStep(tc,0,tp,tp,false,false,POS_FACEUP) then
-            -- Destruir Rodo
-            local e1=Effect.CreateEffect(c)
-            e1:SetType(EFFECT_TYPE_SINGLE)
-            e1:SetCode(EFFECT_SELF_DESTROY)
-            e1:SetReset(RESET_EVENT+RESETS_STANDARD)
-            c:RegisterEffect(e1)
-            Duel.SpecialSummonComplete()
-            -- Mover Super Rodo al lugar de Rodo
-            local e2=Effect.CreateEffect(c)
-            e2:SetType(EFFECT_TYPE_FIELD)
-            e2:SetCode(EFFECT_MOVE_SEQUENCE)
-            e2:SetTargetRange(LOCATION_MZONE,0)
-            e2:SetTarget(s.mvtg)
-            e2:SetValue(c:GetSequence())
-            e2:SetReset(RESET_PHASE+PHASE_END)
-            Duel.RegisterEffect(e2,tp)
-        end
-    end
-    Duel.ShuffleDeck(tp)
+function s.thfilter(c)
+    return c:IsCode(10103200) and c:IsAbleToHand()
 end
 
-function s.mvtg(e,c)
-    return c:IsCode(10103200)
+function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
+    if chk==0 then return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK,0,1,nil) end
+    Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_DECK)
+end
+
+function s.thop(e,tp,eg,ep,ev,re,r,rp)
+    Duel.ConfirmDecktop(tp,5)
+    local g=Duel.GetDecktopGroup(tp,5)
+    if #g>0 then
+        Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
+        local sg=g:FilterSelect(tp,s.thfilter,1,1,nil)
+        if #sg>0 then
+            Duel.SendtoHand(sg,nil,REASON_EFFECT)
+            Duel.ConfirmCards(1-tp,sg)
+            Duel.ShuffleHand(tp)
+        end
+        Duel.ShuffleDeck(tp)
+    end
 end
