@@ -1,45 +1,41 @@
 -- Rodo
+-- Scripted by [Tu nombre aquí]
+
 local s,id=GetID()
+
 function s.initial_effect(c)
-    -- Special summon
+    -- Efecto 1: Revelar y Invocar Especialmente a Super Rodo
     local e1=Effect.CreateEffect(c)
+    e1:SetDescription("Revela las 5 cartas superiores de tu Deck y si una de ellas es 'Super Rodo', invócala especialmente al campo destruyendo a 'Rodo'")
     e1:SetCategory(CATEGORY_SPECIAL_SUMMON)
     e1:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
     e1:SetCode(EVENT_SUMMON_SUCCESS)
     e1:SetCountLimit(1,id)
-    e1:SetTarget(s.target)
-    e1:SetOperation(s.operation)
+    e1:SetTarget(s.target1)
+    e1:SetOperation(s.operation1)
     c:RegisterEffect(e1)
-end
-s.listed_names={10103200}
-
-function s.filter(c,e,tp)
-    return c:IsCode(10103200) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
+    local e2=e1:Clone()
+    e2:SetCode(EVENT_SPSUMMON_SUCCESS)
+    c:RegisterEffect(e2)
 end
 
-function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
-    if chk==0 then
-        local g=Duel.GetDecktopGroup(tp,5)
-        return Duel.GetLocationCount(tp,LOCATION_MZONE)>-1
-            and g:IsExists(s.filter,1,nil,e,tp)
-    end
+function s.target1(e,tp,eg,ep,ev,re,r,rp,chk)
+    if chk==0 then return Duel.GetFieldGroupCount(tp,LOCATION_DECK,0)>=5 end
     Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_DECK)
 end
 
-function s.operation(e,tp,eg,ep,ev,re,r,rp)
-    local c=e:GetHandler()
+function s.operation1(e,tp,eg,ep,ev,re,r,rp)
+    Duel.ConfirmDecktop(tp,5)
     local g=Duel.GetDecktopGroup(tp,5)
-    if #g>0 then
-        Duel.ConfirmCards(tp,g)
-        if g:IsExists(s.filter,1,nil,e,tp) and Duel.GetLocationCount(tp,LOCATION_MZONE)>0
-            and Duel.SelectYesNo(tp,aux.Stringid(id,0)) then
-            Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-            local sg=g:FilterSelect(tp,s.filter,1,1,nil,e,tp)
-            if Duel.SpecialSummonStep(sg:GetFirst(),0,tp,tp,false,false,POS_FACEUP,c:GetPreviousSequence()) then
-                Duel.SendtoGrave(c,REASON_EFFECT)
-                Duel.SpecialSummonComplete()
-            end
+    local sg=g:Filter(Card.IsCode,nil,10103200)
+    if sg:GetCount()>0 and Duel.GetLocationCount(tp,LOCATION_MZONE)>0 then
+        Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
+        local tc=sg:Select(tp,1,1,nil):GetFirst()
+        Duel.SpecialSummon(tc,0,tp,tp,false,false,POS_FACEUP)
+        local c=e:GetHandler()
+        if c:IsRelateToEffect(e) then
+            Duel.Destroy(c,REASON_EFFECT)
         end
-        Duel.ShuffleDeck(tp)
     end
+    Duel.ShuffleDeck(tp)
 end
