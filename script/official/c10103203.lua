@@ -1,56 +1,48 @@
 -- Mega Rodo Divino
 local s,id=GetID()
 function s.initial_effect(c)
-    -- Condiciones especiales de invocación
+    -- Special Summon condition
     local e1=Effect.CreateEffect(c)
-    e1:SetType(EFFECT_TYPE_FIELD)
-    e1:SetCode(EFFECT_SPSUMMON_PROC)
-    e1:SetProperty(EFFECT_FLAG_UNCOPYABLE)
-    e1:SetRange(LOCATION_HAND)
-    e1:SetCondition(s.spcon)
-    e1:SetOperation(s.spop)
+    e1:SetType(EFFECT_TYPE_SINGLE)
+    e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
+    e1:SetCode(EFFECT_SPSUMMON_CONDITION)
+    e1:SetValue(s.splimit)
     c:RegisterEffect(e1)
-    -- Destruir monstruos del adversario
+    -- Special Summon procedure
     local e2=Effect.CreateEffect(c)
-    e2:SetCategory(CATEGORY_DESTROY)
-    e2:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
-    e2:SetCode(EVENT_SPSUMMON_SUCCESS)
-    e2:SetTarget(s.destg)
-    e2:SetOperation(s.desop)
+    e2:SetType(EFFECT_TYPE_FIELD)
+    e2:SetCode(EFFECT_SPSUMMON_PROC)
+    e2:SetProperty(EFFECT_FLAG_UNCOPYABLE)
+    e2:SetRange(LOCATION_HAND)
+    e2:SetCondition(s.spcon)
     c:RegisterEffect(e2)
+    -- Destroy monsters
+    local e3=Effect.CreateEffect(c)
+    e3:SetCategory(CATEGORY_DESTROY)
+    e3:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_F)
+    e3:SetCode(EVENT_SPSUMMON_SUCCESS)
+    e3:SetTarget(s.destg)
+    e3:SetOperation(s.desop)
+    c:RegisterEffect(e3)
 end
 s.listed_names={10103200}
 
-function s.spfilter(c,tp)
-    return c:IsCode(10103200) and c:IsControler(tp) and c:IsReleasable()
+function s.splimit(e,se,sp,st)
+    return se:GetHandler():IsCode(10103200)
 end
 
 function s.spcon(e,c)
     if c==nil then return true end
-    local tp=c:GetControler()
-    return Duel.CheckReleaseGroup(tp,s.spfilter,1,nil)
-end
-
-function s.spop(e,tp,eg,ep,ev,re,r,rp,c)
-    local g=Duel.SelectReleaseGroup(tp,s.spfilter,1,1,false,true,true,c,nil,nil,false,nil)
-    Duel.Release(g,REASON_COST)
-end
-
-function s.desfilter(c,atk)
-    return c:IsFaceup() and c:GetAttack()<=atk
+    return Duel.IsExistingMatchingCard(aux.FilterFaceupFunction(Card.IsCode,10103200),tp,LOCATION_MZONE,0,1,nil)
 end
 
 function s.destg(e,tp,eg,ep,ev,re,r,rp,chk)
-    local atk=e:GetHandler():GetAttack()
-    if chk==0 then return Duel.IsExistingMatchingCard(s.desfilter,tp,0,LOCATION_MZONE,1,nil,atk) end
-    local g=Duel.GetMatchingGroup(s.desfilter,tp,0,LOCATION_MZONE,nil,atk)
+    if chk==0 then return true end
+    local g=Duel.GetMatchingGroup(aux.FilterFaceupFunction(Card.GetAttack,e:GetHandler():GetAttack()),tp,0,LOCATION_MZONE,nil)
     Duel.SetOperationInfo(0,CATEGORY_DESTROY,g,#g,0,0)
 end
 
 function s.desop(e,tp,eg,ep,ev,re,r,rp)
-    local atk=e:GetHandler():GetAttack()
-    local g=Duel.GetMatchingGroup(s.desfilter,tp,0,LOCATION_MZONE,nil,atk)
-    if #g>0 then
-        Duel.Destroy(g,REASON_EFFECT)
-    end
+    local g=Duel.GetMatchingGroup(aux.FilterFaceupFunction(Card.GetAttack,e:GetHandler():GetAttack()),tp,0,LOCATION_MZONE,nil)
+    Duel.Destroy(g,REASON_EFFECT)
 end
