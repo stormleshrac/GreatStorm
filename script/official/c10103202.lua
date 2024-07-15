@@ -1,70 +1,76 @@
--- Omega Rodo Apex
-local s,id = GetID()
+--Omega Rodo Apex
+local s,id=GetID()
 function s.initial_effect(c)
-    -- No puede ser invocado de forma normal
-    c:EnableReviveLimit()
-    -- Invocación especial
+    -- Cannot be Normal Summoned/Set
+    c:EnableUnsummonable()
+    -- Special summon when Mega Rodo Divino is face-up on the field
     local e1=Effect.CreateEffect(c)
-    e1:SetType(EFFECT_TYPE_FIELD)
-    e1:SetCode(EFFECT_SPSUMMON_PROC)
-    e1:SetProperty(EFFECT_FLAG_UNCOPYABLE)
+    e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
+    e1:SetCode(EVENT_TO_GRAVE)
     e1:SetRange(LOCATION_HAND+LOCATION_DECK+LOCATION_GRAVE+LOCATION_REMOVED)
     e1:SetCondition(s.spcon)
     e1:SetOperation(s.spop)
     c:RegisterEffect(e1)
-    -- Destruye todas las cartas en el campo
-    local e2=Effect.CreateEffect(c)
-    e2:SetCategory(CATEGORY_DESTROY)
-    e2:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_F)
-    e2:SetCode(EVENT_SPSUMMON_SUCCESS)
-    e2:SetTarget(s.destg)
-    e2:SetOperation(s.desop)
+    local e2=e1:Clone()
+    e2:SetCode(EVENT_REMOVE)
     c:RegisterEffect(e2)
-    -- Aumenta su ataque y defensa
+    -- Destroy all cards and gain ATK/DEF
     local e3=Effect.CreateEffect(c)
-    e3:SetType(EFFECT_TYPE_SINGLE)
-    e3:SetCode(EFFECT_UPDATE_ATTACK)
-    e3:SetValue(s.atkval)
+    e3:SetCategory(CATEGORY_DESTROY+CATEGORY_ATKCHANGE+CATEGORY_DEFCHANGE)
+    e3:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_F)
+    e3:SetCode(EVENT_SPSUMMON_SUCCESS)
+    e3:SetTarget(s.destg)
+    e3:SetOperation(s.desop)
     c:RegisterEffect(e3)
-    local e4=e3:Clone()
-    e4:SetCode(EFFECT_UPDATE_DEFENSE)
+    -- Destroy at end of turn
+    local e4=Effect.CreateEffect(c)
+    e4:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
+    e4:SetCode(EVENT_PHASE+PHASE_END)
+    e4:SetRange(LOCATION_MZONE)
+    e4:SetCountLimit(1)
+    e4:SetOperation(s.desop2)
     c:RegisterEffect(e4)
-    -- Se destruye al final del turno
-    local e5=Effect.CreateEffect(c)
-    e5:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_F)
-    e5:SetCode(EVENT_PHASE+PHASE_END)
-    e5:SetOperation(s.desop2)
-    c:RegisterEffect(e5)
 end
-s.listed_names={10103203}
 
 function s.spfilter(c,tp)
-    return c:IsCode(10103203) and c:IsPreviousLocation(LOCATION_ONFIELD)
+    return c:IsFaceup() and c:IsCode(10103203)
 end
-function s.spcon(e,c)
-    if c==nil then return true end
-    return Duel.GetLocationCount(c:GetControler(),LOCATION_MZONE)>0
-        and Duel.IsExistingMatchingCard(s.spfilter,c:GetControler(),LOCATION_GRAVE+LOCATION_REMOVED,0,1,nil)
+
+function s.spcon(e,tp,eg,ep,ev,re,r,rp)
+    return Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_MZONE,0,1,nil)
 end
-function s.spop(e,tp,eg,ep,ev,re,r,rp,c)
-    local g=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_GRAVE+LOCATION_REMOVED,0,1,1,nil)
-    Duel.SendtoGrave(g,REASON_COST)
-end
-function s.destg(e,tp,eg,ep,ev,re,r,rp,chk)
-    if chk==0 then return true end
-    local g=Duel.GetMatchingGroup(nil,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,nil)
-    Duel.SetOperationInfo(0,CATEGORY_DESTROY,g,#g,0,0)
-end
-function s.desop(e,tp,eg,ep,ev,re,r,rp)
-    local g=Duel.GetMatchingGroup(nil,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,nil)
-    local ct=Duel.Destroy(g,REASON_EFFECT)
-    if ct>0 then
-        e:GetHandler():RegisterFlagEffect(id,RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END,0,1,ct)
+
+function s.spop(e,tp,eg,ep,ev,re,r,rp)
+    if Duel.SelectYesNo(tp,aux.Stringid(id,0)) then
+        Duel.SpecialSummon(e:GetHandler(),0,tp,tp,false,false,POS_FACEUP)
     end
 end
-function s.atkval(e,c)
-    return c:GetFlagEffectLabel(id)*1000
+
+function s.destg(e,tp,eg,ep,ev,re,r,rp,chk)
+    if chk==0 then return true end
+    local g=Duel.GetFieldGroup(tp,LOCATION_ONFIELD,LOCATION_ONFIELD)
+    Duel.SetOperationInfo(0,CATEGORY_DESTROY,g,#g,0,0)
 end
+
+function s.desop(e,tp,eg,ep,ev,re,r,rp)
+    local c=e:GetHandler()
+    local g=Duel.GetFieldGroup(tp,LOCATION_ONFIELD,LOCATION_ONFIELD)
+    if Duel.Destroy(g,REASON_EFFECT)~=0 then
+        local ct=g:FilterCount(Card.IsLocation,nil,LOCATION_GRAVE)
+        if ct>0 and c:IsRelateToEffect(e) and c:IsFaceup() then
+            local e1=Effect.CreateEffect(c)
+            e1:SetType(EFFECT_TYPE_SINGLE)
+            e1:SetCode(EFFECT_UPDATE_ATTACK)
+            e1:SetValue(ct*1000)
+            e1:SetReset(RESET_EVENT+RESETS_STANDARD_DISABLE)
+            c:RegisterEffect(e1)
+            local e2=e1:Clone()
+            e2:SetCode(EFFECT_UPDATE_DEFENSE)
+            c:RegisterEffect(e2)
+        end
+    end
+end
+
 function s.desop2(e,tp,eg,ep,ev,re,r,rp)
     Duel.Destroy(e:GetHandler(),REASON_EFFECT)
 end
