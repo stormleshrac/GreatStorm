@@ -23,14 +23,14 @@ end
 function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
     if chk==0 then
         local g=Duel.GetDecktopGroup(tp,5)
-        return g:IsExists(s.filter,1,nil,e,tp) and Duel.GetLocationCount(tp,LOCATION_MZONE)>0
+        return g:IsExists(s.filter,1,nil,e,tp)
     end
 end
 
 function s.operation(e,tp,eg,ep,ev,re,r,rp)
     local g=Duel.GetDecktopGroup(tp,5)
     Duel.ConfirmCards(tp,g)
-    if g:IsExists(s.filter,1,nil,e,tp) and Duel.GetLocationCount(tp,LOCATION_MZONE)>0 then
+    if g:IsExists(s.filter,1,nil,e,tp) then
         Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
         local sg=g:FilterSelect(tp,s.filter,1,1,nil,e,tp)
         if #sg>0 then
