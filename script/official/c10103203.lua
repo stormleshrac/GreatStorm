@@ -28,7 +28,7 @@ end
 function s.spcon(e,c)
     if c==nil then return true end
     local tp=c:GetControler()
-    return Duel.CheckReleaseGroup(tp,s.spfilter,1,false,1,true,c,tp,nil,false,nil)
+    return Duel.CheckReleaseGroup(tp,s.spfilter,1,nil)
 end
 
 function s.spop(e,tp,eg,ep,ev,re,r,rp,c)
