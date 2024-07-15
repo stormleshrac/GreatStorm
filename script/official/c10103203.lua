@@ -1,4 +1,3 @@
---Mega Rodo Divino
 local s,id=GetID()
 function s.initial_effect(c)
     -- Cannot be Normal Summoned/Set
@@ -15,7 +14,7 @@ function s.initial_effect(c)
     -- Destroy monsters
     local e2=Effect.CreateEffect(c)
     e2:SetCategory(CATEGORY_DESTROY)
-    e2:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_F)
+    e2:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O) -- Cambiado de TRIGGER_F a TRIGGER_O para hacer el efecto opcional
     e2:SetCode(EVENT_SPSUMMON_SUCCESS)
     e2:SetTarget(s.destg)
     e2:SetOperation(s.desop)
