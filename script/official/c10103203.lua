@@ -21,13 +21,14 @@ function s.initial_effect(c)
 end
 s.listed_names={10103200}
 
-function s.spfilter(c)
-    return c:IsCode(10103200) and c:IsAbleToGraveAsCost()
+function s.spfilter(c,tp)
+    return c:IsCode(10103200) and c:IsControler(tp) and c:IsReleasable()
 end
 
 function s.spcon(e,c)
     if c==nil then return true end
-    return Duel.CheckReleaseGroup(c:GetControler(),s.spfilter,1,false,1,true,c,c:GetControler(),nil,false,nil)
+    local tp=c:GetControler()
+    return Duel.CheckReleaseGroup(tp,s.spfilter,1,false,1,true,c,tp,nil,false,nil)
 end
 
 function s.spop(e,tp,eg,ep,ev,re,r,rp,c)
