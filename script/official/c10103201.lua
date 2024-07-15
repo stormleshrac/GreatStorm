@@ -19,24 +19,27 @@ function s.initial_effect(c)
 end
 
 function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
-    if chk==0 then return Duel.IsExistingMatchingCard(Card.IsAbleToHand,tp,LOCATION_DECK,0,5,nil) end
+    if chk==0 then return Duel.GetFieldGroupCount(tp,LOCATION_DECK,0)>=5 end
 end
 
 function s.operation(e,tp,eg,ep,ev,re,r,rp)
-    if Duel.IsExistingMatchingCard(Card.IsAbleToHand,tp,LOCATION_DECK,0,5,nil) then
+    if Duel.GetFieldGroupCount(tp,LOCATION_DECK,0)>=5 then
         Duel.ConfirmDecktop(tp,5)
         local g=Duel.GetDecktopGroup(tp,5)
-        Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
-        local sg=g:Select(tp,1,1,nil)
-        Duel.ShuffleDeck(tp)
-        if sg:GetFirst():IsCode(10103200) then
-            Duel.BreakEffect()
-            local c=e:GetHandler()
-            if c:IsRelateToEffect(e) and Duel.Destroy(c,REASON_EFFECT)~=0 then
-                Duel.SpecialSummon(sg,0,tp,tp,false,false,POS_FACEUP)
+        Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_CONFIRM)
+        local sg=g:Filter(Card.IsCode,nil,10103200)
+        if #sg>0 then
+            Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
+            local tg=sg:Select(tp,1,1,nil)
+            Duel.ShuffleDeck(tp)
+            if tg:GetCount()>0 then
+                local c=e:GetHandler()
+                if c:IsRelateToEffect(e) and Duel.Destroy(c,REASON_EFFECT)~=0 then
+                    Duel.SpecialSummon(tg,0,tp,tp,false,false,POS_FACEUP)
+                end
             end
         else
-            Duel.MoveToDeckBottom(sg,tp)
+            Duel.ShuffleDeck(tp)
         end
     end
 end
