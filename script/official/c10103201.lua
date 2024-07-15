@@ -34,9 +34,10 @@ function s.operation(e,tp,eg,ep,ev,re,r,rp)
         Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
         local sg=g:FilterSelect(tp,s.filter,1,1,nil,e,tp)
         if #sg>0 then
-            local zone = e:GetHandler():GetSequence()
-            Duel.SpecialSummon(sg,0,tp,tp,false,false,POS_FACEUP,zone)
-            Duel.Destroy(e:GetHandler(),REASON_EFFECT)
+            local tc=sg:GetFirst()
+            if tc:IsCanBeSpecialSummoned(e,0,tp,false,false) and Duel.SendtoGrave(e:GetHandler(),REASON_EFFECT)>0 then
+                Duel.SpecialSummon(tc,0,tp,tp,false,false,POS_FACEUP)
+            end
         end
     end
     Duel.ShuffleDeck(tp)
