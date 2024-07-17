@@ -38,7 +38,7 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
     local hg=Duel.SelectMatchingCard(1-tp,aux.TRUE,tp,LOCATION_HAND,0,1,1,nil)
     if #hg>0 and Duel.SendtoGrave(hg,REASON_DISCARD+REASON_EFFECT)>0 and hg:GetFirst():IsType(TYPE_MONSTER) then
         Duel.Hint(HINT_SELECTMSG,1-tp,HINTMSG_DESTROY)
-        local dg2=Duel.SelectMatchingCard(1-tp,aux.TRUE,1-tp,LOCATION_MZONE,0,1,1,nil)
+        local dg2=Duel.SelectMatchingCard(1-tp,aux.TRUE,tp,LOCATION_MZONE,0,1,1,nil)
         if #dg2>0 then
             Duel.Destroy(dg2,REASON_EFFECT)
         end
