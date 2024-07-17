@@ -18,9 +18,9 @@ function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
 end
 
 function s.activate(e,tp,eg,ep,ev,re,r,rp)
-    -- Opponent discards a card from their hand
-    Duel.Hint(HINT_SELECTMSG,1-tp,HINTMSG_DISCARD)
-    local g1=Duel.SelectMatchingCard(1-tp,Card.IsDiscardable,1-tp,LOCATION_HAND,0,1,1,nil)
+    -- You discard a card from your opponent's hand
+    Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DISCARD)
+    local g1=Duel.SelectMatchingCard(tp,Card.IsDiscardable,tp,0,LOCATION_HAND,1,1,nil)
     if #g1>0 then
         Duel.SendtoGrave(g1,REASON_DISCARD+REASON_EFFECT)
         local dg=g1:GetFirst()
@@ -35,9 +35,9 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
         end
     end
 
-    -- You discard a card from your hand, chosen by your opponent
-    Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DISCARD)
-    local g2=Duel.SelectMatchingCard(tp,Card.IsDiscardable,tp,LOCATION_HAND,0,1,1,nil)
+    -- Opponent discards a card from your hand
+    Duel.Hint(HINT_SELECTMSG,1-tp,HINTMSG_DISCARD)
+    local g2=Duel.SelectMatchingCard(1-tp,Card.IsDiscardable,tp,LOCATION_HAND,1,1,nil)
     if #g2>0 then
         Duel.SendtoGrave(g2,REASON_DISCARD+REASON_EFFECT)
         local dg2=g2:GetFirst()
