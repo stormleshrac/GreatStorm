@@ -37,14 +37,14 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 
     -- Opponent discards a card from your hand
     Duel.Hint(HINT_SELECTMSG,1-tp,HINTMSG_DISCARD)
-    local g2=Duel.SelectMatchingCard(1-tp,Card.IsDiscardable,tp,LOCATION_HAND,1,1,nil)
+    local g2=Duel.SelectMatchingCard(1-tp,Card.IsDiscardable,tp,LOCATION_HAND,0,1,1,nil)
     if #g2>0 then
         Duel.SendtoGrave(g2,REASON_DISCARD+REASON_EFFECT)
         local dg2=g2:GetFirst()
         if dg2:IsType(TYPE_MONSTER) then
             if Duel.IsExistingMatchingCard(aux.TRUE,tp,LOCATION_MZONE,0,1,nil) then
                 Duel.Hint(HINT_SELECTMSG,1-tp,HINTMSG_DESTROY)
-                local mg2=Duel.SelectMatchingCard(1-tp,aux.TRUE,tp,LOCATION_MZONE,0,1,1,nil)
+                local mg2=Duel.SelectMatchingCard(1-tp,aux.TRUE,1-tp,LOCATION_MZONE,1,1,nil)
                 if #mg2>0 then
                     Duel.Destroy(mg2,REASON_EFFECT)
                 end
