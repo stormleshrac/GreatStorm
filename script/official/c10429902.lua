@@ -31,16 +31,15 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
         end
     end
 
-    -- El oponente selecciona una carta de tu mano
-    Duel.Hint(HINT_SELECTMSG,1-tp,HINTMSG_CONFIRM)
-    local hg=Duel.SelectMatchingCard(1-tp,aux.TRUE,1-tp,LOCATION_HAND,0,1,1,nil)
-    Duel.ConfirmCards(tp,hg)
-    if #hg>0 and hg:GetFirst():IsType(TYPE_MONSTER) then
+    -- El oponente selecciona una carta de tu mano y la descarta
+    if Duel.GetFieldGroupCount(tp,LOCATION_HAND,0)==0 then return end
+    Duel.Hint(HINT_SELECTMSG,1-tp,HINTMSG_DISCARD)
+    local hg=Duel.SelectMatchingCard(1-tp,aux.TRUE,tp,LOCATION_HAND,0,1,1,nil)
+    if #hg>0 and Duel.SendtoGrave(hg,REASON_DISCARD+REASON_EFFECT)>0 and hg:GetFirst():IsType(TYPE_MONSTER) then
         Duel.Hint(HINT_SELECTMSG,1-tp,HINTMSG_DESTROY)
         local dg2=Duel.SelectMatchingCard(1-tp,aux.TRUE,1-tp,LOCATION_MZONE,0,1,1,nil)
         if #dg2>0 then
             Duel.Destroy(dg2,REASON_EFFECT)
         end
     end
-    Duel.ShuffleHand(tp)
 end
