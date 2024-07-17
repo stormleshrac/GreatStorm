@@ -37,7 +37,7 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 
     -- Opponent discards a card from your hand
     Duel.Hint(HINT_SELECTMSG,1-tp,HINTMSG_DISCARD)
-    local g2=Duel.SelectMatchingCard(1-tp,Card.IsDiscardable,tp,LOCATION_HAND,0,1,1,nil,e,tp)
+    local g2=Duel.SelectMatchingCard(1-tp,Card.IsDiscardable,tp,LOCATION_HAND,0,1,1,nil)
     if #g2>0 then
         Duel.SendtoGrave(g2,REASON_DISCARD+REASON_EFFECT)
         local dg2=g2:GetFirst()
