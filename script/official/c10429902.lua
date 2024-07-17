@@ -15,7 +15,8 @@ end
 function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
     if chk==0 then return Duel.IsExistingMatchingCard(Card.IsDiscardable,tp,0,LOCATION_HAND,1,nil)
         and Duel.IsExistingMatchingCard(aux.TRUE,tp,0,LOCATION_MZONE,1,nil)
-        and Duel.IsExistingMatchingCard(aux.TRUE,tp,LOCATION_HAND,0,1,nil) end
+        and Duel.IsExistingMatchingCard(aux.TRUE,tp,LOCATION_HAND,0,1,nil)
+        and Duel.IsExistingMatchingCard(aux.TRUE,tp,LOCATION_MZONE,0,1,nil) end
     Duel.SetOperationInfo(0,CATEGORY_HANDES,nil,0,1-tp,1)
 end
 
@@ -42,4 +43,5 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
             Duel.Destroy(dg2,REASON_EFFECT)
         end
     end
+    Duel.ShuffleHand(tp)
 end
