@@ -12,13 +12,13 @@ function s.initial_effect(c)
 end
 
 function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
-    if chk==0 then return Duel.IsPlayerCanDiscardDeck(tp,1) and Duel.IsPlayerCanDiscardDeck(1-tp,1)
-        and Duel.IsExistingMatchingCard(Card.IsDiscardable,tp,0,LOCATION_HAND,1,nil)
+    if chk==0 then return Duel.IsExistingMatchingCard(Card.IsDiscardable,tp,0,LOCATION_HAND,1,nil)
         and Duel.IsExistingMatchingCard(Card.IsDiscardable,tp,LOCATION_HAND,0,1,nil) end
     Duel.SetOperationInfo(0,CATEGORY_HANDES,nil,0,PLAYER_ALL,1)
 end
 
 function s.activate(e,tp,eg,ep,ev,re,r,rp)
+    -- Opponent discards a card from their hand
     Duel.Hint(HINT_SELECTMSG,1-tp,HINTMSG_DISCARD)
     local g1=Duel.SelectMatchingCard(1-tp,Card.IsDiscardable,1-tp,LOCATION_HAND,0,1,1,nil)
     if #g1>0 then
@@ -35,6 +35,7 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
         end
     end
 
+    -- You discard a card from your hand, chosen by your opponent
     Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DISCARD)
     local g2=Duel.SelectMatchingCard(tp,Card.IsDiscardable,tp,LOCATION_HAND,0,1,1,nil)
     if #g2>0 then
