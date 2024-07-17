@@ -14,11 +14,13 @@ end
 
 function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
     if chk==0 then return Duel.IsExistingMatchingCard(Card.IsDiscardable,tp,0,LOCATION_HAND,1,nil)
-        and Duel.IsExistingMatchingCard(aux.TRUE,tp,0,LOCATION_MZONE,1,nil) end
+        and Duel.IsExistingMatchingCard(aux.TRUE,tp,0,LOCATION_MZONE,1,nil)
+        and Duel.IsExistingMatchingCard(aux.TRUE,tp,LOCATION_HAND,0,1,nil) end
     Duel.SetOperationInfo(0,CATEGORY_HANDES,nil,0,1-tp,1)
 end
 
 function s.activate(e,tp,eg,ep,ev,re,r,rp)
+    -- Descarta una carta de la mano del oponente
     Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DISCARD)
     local g=Duel.SelectMatchingCard(tp,Card.IsDiscardable,tp,0,LOCATION_HAND,1,1,nil)
     if #g>0 and Duel.SendtoGrave(g,REASON_DISCARD+REASON_EFFECT)>0 and g:GetFirst():IsType(TYPE_MONSTER) then
@@ -29,13 +31,13 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
         end
     end
 
-    if Duel.GetFieldGroupCount(tp,LOCATION_HAND,0)==0 then return end
-    Duel.Hint(HINT_SELECTMSG,1-tp,HINTMSG_DISCARD)
-    local hg=Duel.SelectMatchingCard(1-tp,Card.IsType,tp,LOCATION_HAND,0,1,1,nil)
+    -- El oponente selecciona una carta de tu mano
+    Duel.Hint(HINT_SELECTMSG,1-tp,HINTMSG_CONFIRM)
+    local hg=Duel.SelectMatchingCard(1-tp,aux.TRUE,1-tp,LOCATION_HAND,0,1,1,nil)
     Duel.ConfirmCards(tp,hg)
-    if hg:GetFirst():IsType(TYPE_MONSTER) then
+    if #hg>0 and hg:GetFirst():IsType(TYPE_MONSTER) then
         Duel.Hint(HINT_SELECTMSG,1-tp,HINTMSG_DESTROY)
-        local dg2=Duel.SelectMatchingCard(1-tp,aux.TRUE,tp,LOCATION_MZONE,0,1,1,nil)
+        local dg2=Duel.SelectMatchingCard(1-tp,aux.TRUE,1-tp,LOCATION_MZONE,0,1,1,nil)
         if #dg2>0 then
             Duel.Destroy(dg2,REASON_EFFECT)
         end
