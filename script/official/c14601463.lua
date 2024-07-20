@@ -16,6 +16,13 @@ function s.initial_effect(c)
     e1:SetTarget(s.target)
     e1:SetOperation(s.operation)
     c:RegisterEffect(e1,false,REGISTER_FLAG_DETACH_XMAT)
+    -- return material
+    local e2=Effect.CreateEffect(c)
+    e2:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
+    e2:SetCode(EVENT_BATTLE_DESTROYING)
+    e2:SetCondition(s.rmcon)
+    e2:SetOperation(s.rmop)
+    c:RegisterEffect(e2)
 end
 s.listed_series={0x7a0}
 
@@ -49,12 +56,24 @@ function s.operation(e,tp,eg,ep,ev,re,r,rp)
         e1:SetType(EFFECT_TYPE_SINGLE)
         e1:SetCode(EFFECT_SET_ATTACK_FINAL)
         e1:SetValue(def)
-        e1:SetReset(RESET_EVENT+RESETS_STANDARD)
+        e1:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END)
         tc:RegisterEffect(e1)
         local e2=e1:Clone()
         e2:SetCode(EFFECT_SET_DEFENSE_FINAL)
         e2:SetValue(atk)
         tc:RegisterEffect(e2)
         tc=g:GetNext()
+    end
+end
+
+function s.rmcon(e,tp,eg,ep,ev,re,r,rp)
+    local c=e:GetHandler()
+    return c:IsRelateToBattle() and c:IsStatus(STATUS_OPPO_BATTLE) and c:IsType(TYPE_XYZ) and c:GetOverlayCount()==0
+end
+
+function s.rmop(e,tp,eg,ep,ev,re,r,rp)
+    local c=e:GetHandler()
+    if c:IsRelateToEffect(e) and c:IsFaceup() then
+        Duel.Overlay(c,Group.FromCards(Duel.GetAttacker()))
     end
 end
