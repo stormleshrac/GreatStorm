@@ -2,7 +2,7 @@
 local s,id=GetID()
 function s.initial_effect(c)
     --Xyz Summon
-    Xyz.AddProcedure(c,nil,4,2,nil,nil,99)
+    Xyz.AddProcedure(c,nil,4,2,s.ovfilter,aux.Stringid(id,0))
     c:EnableReviveLimit()
     --Swap ATK and DEF
     local e1=Effect.CreateEffect(c)
@@ -18,12 +18,15 @@ function s.initial_effect(c)
     c:RegisterEffect(e1)
     --Return material
     local e2=Effect.CreateEffect(c)
-    e2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
-    e2:SetCode(EVENT_DESTROYED)
-    e2:SetRange(LOCATION_MZONE)
+    e2:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_CONTINUOUS)
+    e2:SetCode(EVENT_BATTLE_DESTROYING)
     e2:SetCondition(s.retcon)
     e2:SetOperation(s.retop)
     c:RegisterEffect(e2)
+end
+
+function s.ovfilter(c,tp,xyzc)
+    return c:IsFaceup() and c:IsSetCard(0x7a0) and c:IsType(TYPE_MONSTER)
 end
 
 function s.cost(e,tp,eg,ep,ev,re,r,rp,chk)
@@ -61,22 +64,33 @@ function s.operation(e,tp,eg,ep,ev,re,r,rp)
         e2:SetValue(atk)
         e2:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END)
         tc:RegisterEffect(e2)
-        if c:IsRelateToEffect(e) and c:IsFaceup() and tc:IsRelateToBattle() then
-            c:RegisterFlagEffect(id+1,RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END,0,1)
-            c:RegisterFlagEffect(id+2,RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END,0,1)
-        end
+        -- Store the target for the return material effect
+        c:RegisterFlagEffect(id+1,RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END,0,1)
+        c:RegisterFlagEffect(id+2,RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END,0,1)
+        c:RegisterFlagEffect(tc:GetFieldID(),RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END,0,1)
     end
 end
 
 function s.retcon(e,tp,eg,ep,ev,re,r,rp)
     local c=e:GetHandler()
-    return c:GetFlagEffect(id)~=0 and eg:IsExists(Card.IsReason,1,nil,REASON_BATTLE)
+    local tc=c:GetBattleTarget()
+    return c:GetFlagEffect(id+1)~=0 and tc and tc:IsType(TYPE_MONSTER) and tc:IsReason(REASON_BATTLE) and c:GetFlagEffect(tc:GetFieldID())~=0
 end
 
 function s.retop(e,tp,eg,ep,ev,re,r,rp)
     local c=e:GetHandler()
-    if c:GetFlagEffect(id+1)~=0 and c:GetFlagEffect(id+2)~=0 then
-        Duel.Hint(HINT_CARD,0,id)
-        c:AddCounter(0x1041,1)
+    Duel.Hint(HINT_CARD,0,id)
+    if c:IsRelateToBattle() then
+        local og=Duel.GetOperatedGroup()
+        local rc=og:GetFirst()
+        while rc do
+            if rc:IsReason(REASON_BATTLE) and rc:IsPreviousLocation(LOCATION_MZONE) then
+                c:AddCounter(0x1041,1)
+                if Duel.SendtoGrave(rc,REASON_EFFECT+REASON_RETURN)~=0 then
+                    c:Overlay(og)
+                end
+            end
+            rc=og:GetNext()
+        end
     end
 end
