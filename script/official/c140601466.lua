@@ -4,44 +4,41 @@ function s.initial_effect(c)
     --Activate
     local e1=Effect.CreateEffect(c)
     e1:SetType(EFFECT_TYPE_ACTIVATE)
-    e1:SetCode(EVENT_ATTACK_DISABLED)
+    e1:SetCode(EVENT_ATTACK_ANNOUNCE)
     e1:SetCondition(s.condition)
     e1:SetTarget(s.target)
     e1:SetOperation(s.activate)
     c:RegisterEffect(e1)
 end
 
-function s.cfilter(c)
-    return c:IsFaceup() and c:IsSetCard(0x7a0) and c:IsLocation(LOCATION_MZONE)
+function s.filter(c)
+    return c:IsFaceup() and c:IsSetCard(0x7a0) and c:IsType(TYPE_MONSTER)
 end
 
 function s.condition(e,tp,eg,ep,ev,re,r,rp)
-    local tc=Duel.GetAttacker()
-    return tc and s.cfilter(tc) and tc:IsControler(tp)
+    local at=Duel.GetAttacker()
+    return at and at:IsControler(tp) and at:IsSetCard(0x7a0) and Duel.IsExistingMatchingCard(s.filter,tp,LOCATION_MZONE,0,1,nil)
 end
 
 function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
     if chk==0 then return true end
-    local tc=Duel.GetAttacker()
-    Duel.SetOperationInfo(0,CATEGORY_DISABLE,tc,1,0,0)
 end
 
 function s.activate(e,tp,eg,ep,ev,re,r,rp)
-    local tc=Duel.GetAttacker()
-    if tc and tc:IsRelateToBattle() and tc:IsControler(tp) then
-        -- Negate effects that would negate the attack
-        local e1=Effect.CreateEffect(e:GetHandler())
-        e1:SetType(EFFECT_TYPE_FIELD)
-        e1:SetCode(EFFECT_DISABLE)
-        e1:SetTargetRange(LOCATION_ONFIELD,LOCATION_ONFIELD)
-        e1:SetTarget(s.distg)
-        e1:SetReset(RESET_PHASE+PHASE_BATTLE)
-        Duel.RegisterEffect(e1,tp)
-        -- Continue the attack
-        Duel.ContinueAttack()
+    local c=e:GetHandler()
+    local at=Duel.GetAttacker()
+    if at and at:IsRelateToBattle() and at:IsFaceup() and at:IsControler(tp) and at:IsSetCard(0x7a0) then
+        --Unaffected by opponent's card effects
+        local e1=Effect.CreateEffect(c)
+        e1:SetType(EFFECT_TYPE_SINGLE)
+        e1:SetCode(EFFECT_IMMUNE_EFFECT)
+        e1:SetValue(s.efilter)
+        e1:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_BATTLE)
+        e1:SetOwnerPlayer(tp)
+        at:RegisterEffect(e1)
     end
 end
 
-function s.distg(e,c)
-    return c:IsType(TYPE_TRAP+TYPE_SPELL+TYPE_MONSTER) and c:IsNegatableMonster()
+function s.efilter(e,re)
+    return e:GetOwnerPlayer()~=re:GetOwnerPlayer()
 end
