@@ -43,5 +43,5 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 end
 
 function s.distg(e,c)
-    return c:IsType(TYPE_TRAP+TYPE_SPELL+TYPE_MONSTER) and aux.disfilter1(c)
+    return c:IsType(TYPE_TRAP+TYPE_SPELL+TYPE_MONSTER) and c:IsNegatableMonster()
 end
