@@ -40,5 +40,5 @@ function s.condition(e)
 end
 
 function s.sumlimit(e,c,sump,sumtype,sumpos,targetp,se)
-    return sumpos&POS_FACEUP_ATTACK>0
+    return (sumpos & POS_FACEUP_ATTACK) == POS_FACEUP_ATTACK
 end
