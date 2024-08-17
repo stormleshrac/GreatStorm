@@ -40,5 +40,8 @@ function s.condition(e)
 end
 
 function s.sumlimit(e,c,sump,sumtype,sumpos,targetp,se)
+    if sumpos == nil then
+        return false
+    end
     return (sumpos & POS_FACEUP_ATTACK) == POS_FACEUP_ATTACK
 end
