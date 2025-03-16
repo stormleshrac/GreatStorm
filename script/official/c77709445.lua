@@ -1,10 +1,10 @@
--- Slifer the Borealis Guardian (Rango 10) - Versión Corregida
+-- Slifer the Borealis Guardian (Rango 10) - Script Corregido y Testeado
 Duel.LoadScript("enums_cards.lua")
 Debug.SetAIName("Borealis IA")
 
 local s, id = GetID()
 
-s.material = {3,10} -- 3 monstruos de Nivel 10
+s.material = {3,10}
 s.mat_filter = function(c) return c:IsLevel(10) end
 s.listed_names = {id}
 s.immortal_type = DIVINE
@@ -43,27 +43,47 @@ function s.initial_effect(c)
     e5:SetCode(EFFECT_INDESTRUCTABLE_BATTLE)
     c:RegisterEffect(e5)
     
-    -- Efecto Rápido (Destruir monstruos) - ¡Una vez por turno!
+    -- Efecto Rápido: Destruir monstruos (Once por turno)
     local e6 = Effect.CreateEffect(c)
     e6:SetDescription(aux.Stringid(id, 0))
     e6:SetCategory(CATEGORY_DESTROY)
     e6:SetType(EFFECT_TYPE_QUICK_O)
     e6:SetCode(EVENT_FREE_CHAIN)
     e6:SetRange(LOCATION_MZONE)
-    e6:SetCountLimit(1, id) -- Limitado a 1 uso por turno
+    e6:SetCountLimit(1, id) -- ¡Clave! 1 vez por turno
     e6:SetCost(s.descost)
     e6:SetTarget(s.destg)
     e6:SetOperation(s.desop)
     c:RegisterEffect(e6)
     
-    -- Negar activación + Daño (sin cambios)
-    -- ... (e7 igual que antes) ...
+    -- 3er Efecto Corregido: Negar y destruir carta/monstruo
+    local e7 = Effect.CreateEffect(c)
+    e7:SetDescription(aux.Stringid(id, 1))
+    e7:SetCategory(CATEGORY_NEGATE + CATEGORY_DESTROY)
+    e7:SetType(EFFECT_TYPE_QUICK_O)
+    e7:SetCode(EVENT_CHAINING)
+    e7:SetRange(LOCATION_MZONE)
+    e7:SetCountLimit(1, id+1) -- ID único para este efecto
+    e7:SetCondition(s.negcon)
+    e7:SetCost(s.negtcost)
+    e7:SetTarget(s.negtg)
+    e7:SetOperation(s.negop)
+    c:RegisterEffect(e7)
     
-    -- Efecto al ser destruido (sin cambios)
-    -- ... (e8 igual que antes) ...
+    -- Efecto al ser destruido (Corregido)
+    local e8 = Effect.CreateEffect(c)
+    e8:SetDescription(aux.Stringid(id, 2))
+    e8:SetCategory(CATEGORY_SPECIAL_SUMMON)
+    e8:SetType(EFFECT_TYPE_SINGLE + EFFECT_TYPE_TRIGGER_O)
+    e8:SetCode(EVENT_DESTROYED)
+    e8:SetProperty(EFFECT_FLAG_DELAY)
+    e8:SetCondition(s.spcon)
+    e8:SetTarget(s.sptg)
+    e8:SetOperation(s.spop)
+    c:RegisterEffect(e8)
 end
 
--- Funciones de efecto CORREGIDAS --
+-- Funciones CORREGIDAS --
 
 function s.atkval(e, c)
     return c:GetOverlayCount() * 1500
@@ -73,12 +93,12 @@ function s.protcon(e)
     return e:GetHandler():GetOverlayCount() > 0
 end
 
+-- Efecto Rápido (Destruir monstruos) --
 function s.descost(e, tp, eg, ep, ev, re, r, rp, chk)
     if chk == 0 then return e:GetHandler():CheckRemoveOverlayCard(tp, 1, REASON_COST) end
     e:GetHandler():RemoveOverlayCard(tp, 1, 1, REASON_COST)
 end
 
--- Corrección: Usar Auxiliary.FaceupFilter en lugar del deprecated --
 function s.destg(e, tp, eg, ep, ev, re, r, rp, chk)
     local c = e:GetHandler()
     local g = Duel.GetMatchingGroup(function(sc) 
@@ -99,4 +119,52 @@ function s.desop(e, tp, eg, ep, ev, re, r, rp)
     end
 end
 
--- ... (resto de funciones igual que antes, solo se modifica lo mencionado) ...
+-- 3er Efecto Corregido (Negar y destruir) --
+function s.negcon(e, tp, eg, ep, ev, re, r, rp)
+    return rp == 1 - tp and Duel.IsChainNegatable(ev)
+end
+
+function s.negtcost(e, tp, eg, ep, ev, re, r, rp, chk)
+    if chk == 0 then return e:GetHandler():CheckRemoveOverlayCard(tp, 1, REASON_COST) end
+    e:GetHandler():RemoveOverlayCard(tp, 1, 1, REASON_COST)
+end
+
+function s.negtg(e, tp, eg, ep, ev, re, r, rp, chk)
+    if chk == 0 then return true end
+    Duel.SetOperationInfo(0, CATEGORY_NEGATE, eg, 1, 0, 0)
+    if re:GetHandler():IsDestructable() then
+        Duel.SetOperationInfo(0, CATEGORY_DESTROY, eg, 1, 0, 0)
+    end
+end
+
+function s.negop(e, tp, eg, ep, ev, re, r, rp)
+    if Duel.NegateActivation(ev) and re:GetHandler():IsRelateToEffect(re) then
+        Duel.Destroy(eg, REASON_EFFECT)
+    end
+end
+
+-- Efecto al ser destruido (Corregido) --
+function s.spcon(e, tp, eg, ep, ev, re, r, rp)
+    return e:GetHandler():IsPreviousLocation(LOCATION_MZONE)
+end
+
+function s.spfilter(c, e, tp)
+    return c:IsType(TYPE_XYZ) and c:IsRankBelow(9) and c:IsCanBeSpecialSummoned(e, SUMMON_TYPE_XYZ, tp, false, false)
+end
+
+function s.sptg(e, tp, eg, ep, ev, re, r, rp, chk)
+    if chk == 0 then return Duel.IsExistingMatchingCard(s.spfilter, tp, LOCATION_EXTRA, 0, 1, nil, e, tp) end
+    Duel.SetOperationInfo(0, CATEGORY_SPECIAL_SUMMON, nil, 1, tp, LOCATION_EXTRA)
+end
+
+function s.spop(e, tp, eg, ep, ev, re, r, rp)
+    local c = e:GetHandler()
+    Duel.Hint(HINT_SELECTMSG, tp, HINTMSG_SPSUMMON)
+    local sc = Duel.SelectMatchingCard(tp, s.spfilter, tp, LOCATION_EXTRA, 0, 1, 1, nil, e, tp):GetFirst()
+    if sc and Duel.SpecialSummon(sc, SUMMON_TYPE_XYZ, tp, tp, false, false, POS_FACEUP) > 0 then
+        sc:CompleteProcedure()
+        if c:IsLocation(LOCATION_GRAVE) then
+            Duel.Overlay(sc, c)
+        end
+    end
+end
